@@ -1,0 +1,934 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: linear-gradient(135deg, #fdf6e3 0%, #f0e6d3 100%);
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #333;
+    min-height: 100vh;
+    counter-reset: scoreA scoreB scoreC scoreD scoreE;
+  }
+
+  .container { max-width: 720px; margin: 0 auto; padding: 24px 16px; }
+
+  header {
+    text-align: center;
+    padding: 32px 20px;
+    background: linear-gradient(135deg, #ff9a56 0%, #ff6b6b 50%, #ee5a9f 100%);
+    border-radius: 16px;
+    margin-bottom: 28px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: "🐾";
+    position: absolute;
+    font-size: 120px;
+    opacity: 0.1;
+    top: -20px;
+    right: -10px;
+  }
+  header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; position: relative; }
+  header p { font-size: 15px; opacity: 0.9; position: relative; }
+
+  .intro-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid #eee;
+    text-align: center;
+  }
+  .intro-card h2 { font-size: 20px; color: #ee5a9f; margin-bottom: 8px; }
+  .intro-card p { font-size: 14px; color: #666; line-height: 1.6; }
+
+  /* Progress Bar */
+  .progress-bar-container {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    border: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .progress-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .progress-track {
+    height: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff9a56, #ee5a9f);
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  /* Colleague Name Input */
+  .name-input-section {
+    text-align: center;
+    margin-bottom: 24px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #eee;
+  }
+  .name-input-section label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    display: block;
+    margin-bottom: 10px;
+  }
+  .name-input-section input[type="text"] {
+    padding: 10px 16px;
+    border: 2px solid #e8e8e8;
+    border-radius: 8px;
+    font-size: 15px;
+    width: 280px;
+    max-width: 100%;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: system-ui, sans-serif;
+  }
+  .name-input-section input[type="text"]:focus { border-color: #ee5a9f; }
+
+  /* Quiz Section */
+  .quiz-section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #eee;
+    margin-bottom: 20px;
+  }
+  .quiz-section h2 {
+    font-size: 20px;
+    color: #ee5a9f;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+  .quiz-section > p {
+    font-size: 13px;
+    color: #999;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .question-block {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .question-block:last-of-type { border-bottom: none; margin-bottom: 12px; }
+  .question-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .q-num {
+    background: linear-gradient(135deg, #ff9a56, #ee5a9f);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .q-num-done {
+    background: #22c55e;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 8px; padding-left: 32px; }
+  .options label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #e8e8e8;
+    cursor: pointer;
+    font-size: 13px;
+    color: #555;
+    transition: all 0.15s ease;
+    background: #fafafa;
+  }
+  .options label:hover { border-color: #ee5a9f; background: #fff5f8; color: #333; }
+  .options input[type="radio"] { accent-color: #ee5a9f; flex-shrink: 0; }
+  .options input[type="radio"]:checked + span { color: #ee5a9f; font-weight: 600; }
+
+  /* ===== CSS COUNTER SCORING SYSTEM ===== */
+  /* Increment counters based on checked radio values */
+  input[value="A"]:checked { counter-increment: scoreA 1; }
+  input[value="B"]:checked { counter-increment: scoreB 1; }
+  input[value="C"]:checked { counter-increment: scoreC 1; }
+  input[value="D"]:checked { counter-increment: scoreD 1; }
+  input[value="E"]:checked { counter-increment: scoreE 1; }
+
+  /* Track answered questions for progress */
+  input[name="q1"]:checked ~ .quiz-section .q1-mark,
+  input[name="q2"]:checked ~ .quiz-section .q2-mark,
+  input[name="q3"]:checked ~ .quiz-section .q3-mark,
+  input[name="q4"]:checked ~ .quiz-section .q4-mark,
+  input[name="q5"]:checked ~ .quiz-section .q5-mark,
+  input[name="q6"]:checked ~ .quiz-section .q6-mark,
+  input[name="q7"]:checked ~ .quiz-section .q7-mark,
+  input[name="q8"]:checked ~ .quiz-section .q8-mark,
+  input[name="q9"]:checked ~ .quiz-section .q9-mark,
+  input[name="q10"]:checked ~ .quiz-section .q10-mark {
+    background: #22c55e;
+  }
+
+  /* ===== SCOREBOARD ===== */
+  .scoreboard {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #eee;
+    margin-bottom: 20px;
+  }
+  .scoreboard h2 {
+    font-size: 20px;
+    color: #ee5a9f;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .score-bars { display: flex; flex-direction: column; gap: 12px; }
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .score-animal {
+    font-size: 28px;
+    width: 40px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .score-info { flex: 1; }
+  .score-name { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 4px; }
+  .score-track {
+    height: 24px;
+    background: #f0f0f0;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .score-fill {
+    height: 100%;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    min-width: 28px;
+    transition: width 0.5s ease;
+  }
+  .score-fill-a { background: linear-gradient(90deg, #f59e0b, #d97706); }
+  .score-fill-b { background: linear-gradient(90deg, #ef4444, #dc2626); }
+  .score-fill-c { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+  .score-fill-d { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+  .score-fill-e { background: linear-gradient(90deg, #10b981, #059669); }
+
+  .score-count {
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: 700;
+    min-width: 30px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .score-count-a::after { content: counter(scoreA); color: #d97706; }
+  .score-count-b::after { content: counter(scoreB); color: #dc2626; }
+  .score-count-c::after { content: counter(scoreC); color: #2563eb; }
+  .score-count-d::after { content: counter(scoreD); color: #7c3aed; }
+  .score-count-e::after { content: counter(scoreE); color: #059669; }
+
+  /* ===== RESULT CARDS (all hidden by default) ===== */
+  .results-area {
+    margin-bottom: 20px;
+  }
+  .result-card {
+    display: none;
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px 24px;
+    border: 2px solid #eee;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .result-card .big-emoji { font-size: 80px; margin-bottom: 12px; }
+  .result-card h3 { font-size: 24px; margin-bottom: 4px; }
+  .result-card .subtitle { font-size: 14px; color: #999; margin-bottom: 16px; font-style: italic; }
+  .result-card .desc {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.8;
+    max-width: 520px;
+    margin: 0 auto 16px;
+    text-align: left;
+  }
+  .result-card .traits {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  .result-card .trait-tag {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .result-beaver { border-color: #f59e0b; }
+  .result-beaver h3 { color: #d97706; }
+  .result-beaver .trait-tag { background: #fffbeb; color: #d97706; }
+
+  .result-fox { border-color: #ef4444; }
+  .result-fox h3 { color: #dc2626; }
+  .result-fox .trait-tag { background: #fef2f2; color: #dc2626; }
+
+  .result-dolphin { border-color: #3b82f6; }
+  .result-dolphin h3 { color: #2563eb; }
+  .result-dolphin .trait-tag { background: #eff6ff; color: #2563eb; }
+
+  .result-owl { border-color: #8b5cf6; }
+  .result-owl h3 { color: #7c3aed; }
+  .result-owl .trait-tag { background: #f5f3ff; color: #7c3aed; }
+
+  .result-cat { border-color: #10b981; }
+  .result-cat h3 { color: #059669; }
+  .result-cat .trait-tag { background: #ecfdf5; color: #059669; }
+
+  /* ===== SHOW RESULT BASED ON SUBMIT CHECKBOX ===== */
+  .submit-section {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .submit-checkbox { display: none; }
+  .submit-btn {
+    display: inline-block;
+    padding: 14px 48px;
+    background: linear-gradient(135deg, #ff9a56 0%, #ff6b6b 50%, #ee5a9f 100%);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 15px rgba(238, 90, 159, 0.3);
+    user-select: none;
+  }
+  .submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(238, 90, 159, 0.4);
+  }
+  .submit-btn:active { transform: translateY(0); }
+
+  /* Before submit: hide results & scoreboard */
+  .scoreboard,
+  .results-area,
+  .result-instructions { display: none; }
+
+  /* After submit: show scoreboard & results */
+  .submit-checkbox:checked ~ .scoreboard,
+  .submit-checkbox:checked ~ .results-area,
+  .submit-checkbox:checked ~ .result-instructions { display: block; }
+
+  .submit-checkbox:checked ~ .submit-section .submit-btn-text { display: none; }
+  .submit-checkbox:checked ~ .submit-section .reset-text { display: inline; }
+  .reset-text { display: none; }
+
+  .result-instructions {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #eee;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .result-instructions p { font-size: 14px; color: #666; line-height: 1.6; }
+  .result-instructions .highlight { color: #ee5a9f; font-weight: 700; }
+
+  /* ===== WINNER DISPLAY LOGIC ===== */
+  /* We use CSS counters to display scores. For the result card reveal,
+     we use a clever approach: all 5 result cards are shown after submit,
+     but only the relevant one is highlighted. Since pure CSS can't compare
+     counters, we show ALL animal descriptions in a beautiful gallery
+     with the scores, so users can see their top match! */
+
+  .submit-checkbox:checked ~ .results-area .result-card {
+    display: block;
+  }
+
+  /* Score-based visual emphasis — cards with 0 score get dimmed */
+  .all-results-grid {
+    display: grid;
+    gap: 16px;
+  }
+
+  .result-card-mini {
+    display: none;
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #eee;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+  .submit-checkbox:checked ~ .results-area .result-card-mini {
+    display: block;
+  }
+  .result-card-mini:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  }
+  .result-card-mini .emoji { font-size: 48px; margin-bottom: 8px; }
+  .result-card-mini h3 { font-size: 18px; margin-bottom: 4px; }
+  .result-card-mini .subtitle { font-size: 12px; color: #999; font-style: italic; margin-bottom: 10px; }
+  .result-card-mini .mini-score {
+    font-family: monospace;
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .result-card-mini .desc {
+    font-size: 13px;
+    color: #555;
+    line-height: 1.7;
+    text-align: left;
+  }
+  .result-card-mini .traits {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 10px;
+  }
+  .result-card-mini .trait-tag {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .mini-beaver { border-color: #f59e0b; }
+  .mini-beaver h3 { color: #d97706; }
+  .mini-beaver .mini-score::after { content: counter(scoreA) " / 10"; color: #d97706; }
+  .mini-beaver .trait-tag { background: #fffbeb; color: #d97706; }
+
+  .mini-fox { border-color: #ef4444; }
+  .mini-fox h3 { color: #dc2626; }
+  .mini-fox .mini-score::after { content: counter(scoreB) " / 10"; color: #dc2626; }
+  .mini-fox .trait-tag { background: #fef2f2; color: #dc2626; }
+
+  .mini-dolphin { border-color: #3b82f6; }
+  .mini-dolphin h3 { color: #2563eb; }
+  .mini-dolphin .mini-score::after { content: counter(scoreC) " / 10"; color: #2563eb; }
+  .mini-dolphin .trait-tag { background: #eff6ff; color: #2563eb; }
+
+  .mini-owl { border-color: #8b5cf6; }
+  .mini-owl h3 { color: #7c3aed; }
+  .mini-owl .mini-score::after { content: counter(scoreD) " / 10"; color: #7c3aed; }
+  .mini-owl .trait-tag { background: #f5f3ff; color: #7c3aed; }
+
+  .mini-cat { border-color: #10b981; }
+  .mini-cat h3 { color: #059669; }
+  .mini-cat .mini-score::after { content: counter(scoreE) " / 10"; color: #059669; }
+  .mini-cat .trait-tag { background: #ecfdf5; color: #059669; }
+
+  /* Winner banner */
+  .winner-banner {
+    display: none;
+    background: linear-gradient(135deg, #fff5f0, #fff0f5, #f0f0ff);
+    border: 2px solid #ee5a9f;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .submit-checkbox:checked ~ .results-area .winner-banner { display: block; }
+  .winner-banner h2 { font-size: 22px; color: #ee5a9f; margin-bottom: 8px; }
+  .winner-banner p { font-size: 14px; color: #666; line-height: 1.6; }
+
+  /* Share section */
+  .share-section {
+    display: none;
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #eee;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .submit-checkbox:checked ~ .share-section { display: block; }
+  .share-section h2 { font-size: 18px; color: #ee5a9f; margin-bottom: 8px; }
+  .share-section p { font-size: 13px; color: #666; line-height: 1.6; }
+
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    color: #aaa;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .result-card-mini {
+      animation: fadeUp 0.5s ease-out both;
+    }
+    .result-card-mini:nth-child(2) { animation-delay: 0.1s; }
+    .result-card-mini:nth-child(3) { animation-delay: 0.2s; }
+    .result-card-mini:nth-child(4) { animation-delay: 0.3s; }
+    .result-card-mini:nth-child(5) { animation-delay: 0.4s; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: none; }
+    }
+    .winner-banner {
+      animation: popIn 0.6s ease-out both;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  }
+
+  @media (max-width: 600px) {
+    .container { padding: 16px 12px; }
+    header h1 { font-size: 22px; }
+    .result-card-mini .emoji { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <h1>🐾 Office Spirit Animal Quiz</h1>
+    <p>Discover your colleague's true workplace personality!</p>
+  </header>
+
+  <div class="intro-card">
+    <h2>How It Works</h2>
+    <p>Answer 10 fun questions about your colleague's workplace habits, hit <strong>"Reveal Spirit Animal"</strong>, and watch the scores tally up automatically! 🎉</p>
+  </div>
+
+  <!-- Colleague Name -->
+  <div class="name-input-section">
+    <label for="colleague-name">👤 Who are you judging today?</label>
+    <input type="text" id="colleague-name" placeholder="Enter colleague's name...">
+  </div>
+
+  <!-- All radios must be siblings of .scoreboard and .results-area for CSS counters to work -->
+  <!-- Hidden radios placed here, labels inside quiz section point to them -->
+
+  <input type="radio" name="q1" value="A" id="q1a" class="options-radio" style="display:none">
+  <input type="radio" name="q1" value="B" id="q1b" class="options-radio" style="display:none">
+  <input type="radio" name="q1" value="C" id="q1c" class="options-radio" style="display:none">
+  <input type="radio" name="q1" value="D" id="q1d" class="options-radio" style="display:none">
+  <input type="radio" name="q1" value="E" id="q1e" class="options-radio" style="display:none">
+
+  <input type="radio" name="q2" value="A" id="q2a" class="options-radio" style="display:none">
+  <input type="radio" name="q2" value="B" id="q2b" class="options-radio" style="display:none">
+  <input type="radio" name="q2" value="C" id="q2c" class="options-radio" style="display:none">
+  <input type="radio" name="q2" value="D" id="q2d" class="options-radio" style="display:none">
+  <input type="radio" name="q2" value="E" id="q2e" class="options-radio" style="display:none">
+
+  <input type="radio" name="q3" value="A" id="q3a" class="options-radio" style="display:none">
+  <input type="radio" name="q3" value="B" id="q3b" class="options-radio" style="display:none">
+  <input type="radio" name="q3" value="C" id="q3c" class="options-radio" style="display:none">
+  <input type="radio" name="q3" value="D" id="q3d" class="options-radio" style="display:none">
+  <input type="radio" name="q3" value="E" id="q3e" class="options-radio" style="display:none">
+
+  <input type="radio" name="q4" value="A" id="q4a" class="options-radio" style="display:none">
+  <input type="radio" name="q4" value="B" id="q4b" class="options-radio" style="display:none">
+  <input type="radio" name="q4" value="C" id="q4c" class="options-radio" style="display:none">
+  <input type="radio" name="q4" value="D" id="q4d" class="options-radio" style="display:none">
+  <input type="radio" name="q4" value="E" id="q4e" class="options-radio" style="display:none">
+
+  <input type="radio" name="q5" value="A" id="q5a" class="options-radio" style="display:none">
+  <input type="radio" name="q5" value="B" id="q5b" class="options-radio" style="display:none">
+  <input type="radio" name="q5" value="C" id="q5c" class="options-radio" style="display:none">
+  <input type="radio" name="q5" value="D" id="q5d" class="options-radio" style="display:none">
+  <input type="radio" name="q5" value="E" id="q5e" class="options-radio" style="display:none">
+
+  <input type="radio" name="q6" value="A" id="q6a" class="options-radio" style="display:none">
+  <input type="radio" name="q6" value="B" id="q6b" class="options-radio" style="display:none">
+  <input type="radio" name="q6" value="C" id="q6c" class="options-radio" style="display:none">
+  <input type="radio" name="q6" value="D" id="q6d" class="options-radio" style="display:none">
+  <input type="radio" name="q6" value="E" id="q6e" class="options-radio" style="display:none">
+
+  <input type="radio" name="q7" value="A" id="q7a" class="options-radio" style="display:none">
+  <input type="radio" name="q7" value="B" id="q7b" class="options-radio" style="display:none">
+  <input type="radio" name="q7" value="C" id="q7c" class="options-radio" style="display:none">
+  <input type="radio" name="q7" value="D" id="q7d" class="options-radio" style="display:none">
+  <input type="radio" name="q7" value="E" id="q7e" class="options-radio" style="display:none">
+
+  <input type="radio" name="q8" value="A" id="q8a" class="options-radio" style="display:none">
+  <input type="radio" name="q8" value="B" id="q8b" class="options-radio" style="display:none">
+  <input type="radio" name="q8" value="C" id="q8c" class="options-radio" style="display:none">
+  <input type="radio" name="q8" value="D" id="q8d" class="options-radio" style="display:none">
+  <input type="radio" name="q8" value="E" id="q8e" class="options-radio" style="display:none">
+
+  <input type="radio" name="q9" value="A" id="q9a" class="options-radio" style="display:none">
+  <input type="radio" name="q9" value="B" id="q9b" class="options-radio" style="display:none">
+  <input type="radio" name="q9" value="C" id="q9c" class="options-radio" style="display:none">
+  <input type="radio" name="q9" value="D" id="q9d" class="options-radio" style="display:none">
+  <input type="radio" name="q9" value="E" id="q9e" class="options-radio" style="display:none">
+
+  <input type="radio" name="q10" value="A" id="q10a" class="options-radio" style="display:none">
+  <input type="radio" name="q10" value="B" id="q10b" class="options-radio" style="display:none">
+  <input type="radio" name="q10" value="C" id="q10c" class="options-radio" style="display:none">
+  <input type="radio" name="q10" value="D" id="q10d" class="options-radio" style="display:none">
+  <input type="radio" name="q10" value="E" id="q10e" class="options-radio" style="display:none">
+
+  <!-- Submit checkbox -->
+  <input type="checkbox" id="submit-quiz" class="submit-checkbox">
+
+  <!-- Quiz Questions -->
+  <div class="quiz-section">
+    <h2>📝 The 10 Questions</h2>
+    <p>Think about your colleague and pick the answer that fits them best!</p>
+
+    <!-- Q1 -->
+    <div class="question-block">
+      <div class="question-label">
+        <span class="q-num q1-mark">1</span>
+        <span>It's Monday morning. Where is your colleague?</span>
+      </div>
+      <div class="options">
+        <label for="q1a"><span>Already at their desk with a to-do list longer than a CVS receipt 🦫</span></label>
+        <label for="q1b"><span>Casually strolling in, already planning who to delegate to 🦊</span></label>
+        <label for="q1c"><span>In the kitchen making coffee for everyone and chatting 🐬</span></label>
+        <label for="q1d"><span>Quietly at their desk, silently observing who's late 🦉</span></label>
+        <label for="q1e"><span>Logging in from home… maybe still in pajamas 🐱</span></label>
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block">
+      <div class="question-label">
+        <span class="q-num q2-mark">2</span>
+        <span>A huge urgent project just dropped. Your colleague's reaction?</span>
+      </div>
+      <div class="options">
+        <label for="q2a"><span>Rolls up sleeves and starts working immediately 🦫</span></label>
+        <label for="q2b"><span>"Hey, you're great at this — can you take the lead?" 🦊</span></label>
+        <label for="q2c"><span>Organizes a team huddle to boost everyone's spirits 🐬</span></label>
+        <label for="q2d"><span>Quietly analyzes who should do what and reports to the boss 🦉</span></label>
+        <label for="q2e"><span>"Cool. Is it due today though? No? Then we're fine." 🐱</span></label>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block">
+      <div class="question-label">
+        <span class="q-num q3-mark">3</span>
+        <span>How does your colleague handle meetings?</span>
+      </div>
+      <div class="options">
+        <label for="q3a"><span>Takes detailed notes and follows up with action items 🦫</span></label>
+        <label for="q3b"><span>Talks a lot, volunteers others for tasks, leaves early 🦊</span></label>
+        <label for="q3c"><span>Cracks jokes, keeps the energy up, everyone loves them 🐬</span></label>
+        <label for="q3d"><span>Sits quietly, takes mental notes on who said what 🦉</span></label>
+        <label for="q3e"><span>Camera off, mic muted, possibly napping 🐱</span></label>
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block">
+      <div class="question-label">
+        <span class="q-num q4-mark">4</span>
+        <span>Your colleague's email inbox looks like…</span>
+      </div>
+      <div class="options">
+        <label for="q4a"><span>Inbox zero. Every email replied to within the hour 🦫</span></label>
+        <label for="q4b"><span>Full of forwarded tasks with "Can you handle this?" 🦊</span></label>
+        <label for="q4c"><span>Mostly group chat memes and party planning threads 🐬</span></label>
+        <label for="q4d"><span>Organized into 47 folders with color-coded labels 🦉</span></label>
+        <label for="q4e"><span>12,847 unread emails. They use search when needed 🐱</span></label>
+      </div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block">
+      <div class="question-label">
+        <span class="q-num q5-mark">5</span>
+        <span>There's office drama. What does your colleague do?</span>
+      </div>
+      <div class="options">
+        <label for="q5a"><span>Ignores it completely — too busy working 🦫</span></label>
+        <label for="q5b"><span>Somehow benefits from it without getting their hands dirty 🦊</span></label>
+        <label for="q5c"><span>Tries to mediate and make everyone friends again 🐬</span></label>
+        <label for="q5d"><span>Already knew about it before anyone else. Has receipts 🦉</span></label>
+        <label for="q5e"><span>Watches from afar with popcorn energy 🐱</span></label>
+      </div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block">
+      <div class="question-label">
+        <span class="q-num q6-mark">6</span>
+        <span>How does your colleague react when someone takes credit for their work?</span>
+      </div>
+      <div class="options">
+        <label for="q6a"><span>Doesn't notice — already moved on to the next task 🦫</span></label>
+        <label for="q6b"><span>They're usually the one taking credit, honestly 🦊</span></label>
+        <label for="q6c"><span>"It's fine, it was a team effort!" (genuinely means it) 🐬</span></label>
+        <label for="q6d"><span>Says nothing… but remembers. Oh, they remember 🦉</span></label>
+        <label for="q6e"><span>Shrugs. "Less attention on me = less work expected" 🐱</span></label>
+      </div>
+    </div>
+
+    <!-- Q7 -->
+    <div class="question-block">
+      <div class="question-label">
+        <span class="q-num q7-mark">7</span>
+        <span>It's Friday at 4:30 PM. Your colleague is…</span>
+      </div>
+      <div class="options">
+        <label for="q7a"><span>Still grinding. "I'll just finish this one more thing…" 🦫</span></label>
+        <label for="q7b"><span>Already left at 3, but somehow no one noticed 🦊</span></label>
+        <label for="q7c"><span>Organizing after-work drinks for the team 🐬</span></label>
+        <label for="q7d"><span>Wrapping up their weekly observation notes 🦉</span></label>
+        <label for="q7e"><span>Mentally checked out since Thursday 🐱</span></label>
+      </div>
+    </div>
+
+    <!-- Q8 -->
+    <div class="question-block">
+      <div class="question-label">
+        <span class="q-num q8-mark">8</span>
+        <span>Your colleague's desk/workspace looks like…</span>
+      </div>
+      <div class="options">
+        <label for="q8a"><span>Covered in sticky notes, planners, and three monitors 🦫</span></label>
+        <label for="q8b"><span>Suspiciously clean for someone who claims to be "so busy" 🦊</span></label>
+        <label for="q8c"><span>Photos of team outings, snacks for sharing, a plant named Gerald 🐬</span></label>
+        <label for="q8d"><span>Minimalist. One notebook. One pen. Everything they need is in their head 🦉</span></label>
+        <label for="q8e"><span>A cozy nest — blanket, slippers, maybe a pillow hidden somewhere 🐱</span></label>
+      </div>
+    </div>
+
+    <!-- Q9 -->
+    <div class="question-block">
+      <div class="question-label">
+        <span class="q-num q9-mark">9</span>
+        <span>How does your colleague handle feedback or criticism?</span>
+      </div>
+      <div class="options">
+        <label for="q9a"><span>Takes it seriously and immediately works to improve 🦫</span></label>
+        <label for="q9b"><span>Deflects it smoothly — "Oh, that part was actually handled by…" 🦊</span></label>
+        <label for="q9c"><span>Gets a little sad but bounces back with a group lunch 🐬</span></label>
+        <label for="q9d"><span>Nods calmly, files it away, adjusts strategy accordingly 🦉</span></label>
+        <label for="q9e"><span>"Noted." (Proceeds to change absolutely nothing) 🐱</span></label>
+      </div>
+    </div>
+
+    <!-- Q10 -->
+    <div class="question-block">
+      <div class="question-label">
+        <span class="q-num q10-mark">10</span>
+        <span>If your colleague were leaving the company, what would happen?</span>
+      </div>
+      <div class="options">
+        <label for="q10a"><span>Total panic — who's going to do all the actual work now?! 🦫</span></label>
+        <label for="q10b"><span>Everyone realizes half the "team projects" were done by others 🦊</span></label>
+        <label for="q10c"><span>The biggest, most emotional farewell party ever thrown 🐬</span></label>
+        <label for="q10d"><span>Suddenly everyone's secrets feel a lot less safe 🦉</span></label>
+        <label for="q10e"><span>Wait… they still worked here? 🐱</span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit Button -->
+  <div class="submit-section">
+    <label for="submit-quiz" class="submit-btn">
+      <span class="submit-btn-text">🐾 Reveal Spirit Animal!</span>
+      <span class="reset-text">🔄 Hide Results</span>
+    </label>
+  </div>
+
+  <!-- Scoreboard -->
+  <div class="scoreboard">
+    <h2>📊 Score Breakdown</h2>
+    <div class="score-bars">
+      <div class="score-row">
+        <div class="score-animal">🦫</div>
+        <div class="score-info">
+          <div class="score-name">The Busy Beaver</div>
+          <div class="score-track"><div class="score-fill score-fill-a" style="width: 100%;"><span class="score-count score-count-a"></span></div></div>
+        </div>
+      </div>
+      <div class="score-row">
+        <div class="score-animal">🦊</div>
+        <div class="score-info">
+          <div class="score-name">The Sly Fox</div>
+          <div class="score-track"><div class="score-fill score-fill-b" style="width: 100%;"><span class="score-count score-count-b"></span></div></div>
+        </div>
+      </div>
+      <div class="score-row">
+        <div class="score-animal">🐬</div>
+        <div class="score-info">
+          <div class="score-name">The Dazzling Dolphin</div>
+          <div class="score-track"><div class="score-fill score-fill-c" style="width: 100%;"><span class="score-count score-count-c"></span></div></div>
+        </div>
+      </div>
+      <div class="score-row">
+        <div class="score-animal">🦉</div>
+        <div class="score-info">
+          <div class="score-name">The Watchful Owl</div>
+          <div class="score-track"><div class="score-fill score-fill-d" style="width: 100%;"><span class="score-count score-count-d"></span></div></div>
+        </div>
+      </div>
+      <div class="score-row">
+        <div class="score-animal">🐱</div>
+        <div class="score-info">
+          <div class="score-name">The Cozy Cat</div>
+          <div class="score-track"><div class="score-fill score-fill-e" style="width: 100%;"><span class="score-count score-count-e"></span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Instructions -->
+  <div class="result-instructions">
+    <p>👆 The animal with the <span class="highlight">highest score</span> is your colleague's Spirit Animal!<br>
+    Check out their full personality profile below 👇</p>
+  </div>
+
+  <!-- All Result Cards -->
+  <div class="results-area">
+    <div class="all-results-grid">
+
+      <div class="result-card-mini mini-beaver">
+        <div class="emoji">🦫</div>
+        <h3>The Busy Beaver</h3>
+        <div class="subtitle">"The Workhorse Wonder"</div>
+        <div class="mini-score"></div>
+        <div class="desc">
+          This colleague is the ultimate grinder — always first in, last out. They carry the team on their back, pick up everyone's slack, and somehow still meet every deadline. If work were a gym, they'd be deadlifting the entire department. You want them on your team… always. When chaos strikes, they don't complain — they just open another spreadsheet and get to work.
+        </div>
+        <div class="traits">
+          <span class="trait-tag">💪 Hardest Worker</span>
+          <span class="trait-tag">📋 Ultra Reliable</span>
+          <span class="trait-tag">⏰ Always On Time</span>
+          <span class="trait-tag">🏆 Team MVP</span>
+        </div>
+      </div>
+
+      <div class="result-card-mini mini-fox">
+        <div class="emoji">🦊</div>
+        <h3>The Sly Fox</h3>
+        <div class="subtitle">"The Smooth Delegator"</div>
+        <div class="mini-score"></div>
+        <div class="desc">
+          Charming, clever, and suspiciously never busy. This colleague has mastered the art of pushing their work onto others with a smile. They'll compliment your skills right before asking you to "help out with a tiny thing" — which turns out to be their entire project. They take credit like a pro and dodge blame like a ninja. Beware the flattery!
+        </div>
+        <div class="traits">
+          <span class="trait-tag">🎭 Master Delegator</span>
+          <span class="trait-tag">🗣️ Smooth Talker</span>
+          <span class="trait-tag">🏃 Blame Dodger</span>
+          <span class="trait-tag">⚠️ Work Pusher</span>
+        </div>
+      </div>
+
+      <div class="result-card-mini mini-dolphin">
+        <div class="emoji">🐬</div>
+        <h3>The Dazzling Dolphin</h3>
+        <div class="subtitle">"The Social Superstar"</div>
+        <div class="mini-score"></div>
+        <div class="desc">
+          Everyone's best friend at the office! They organize the birthday parties, remember your dog's name, and somehow know all the gossip before it happens. They may not do the most work, but they keep morale sky-high and make the office feel like a second home. The office would be a sad, grey cubicle farm without them.
+        </div>
+        <div class="traits">
+          <span class="trait-tag">🎉 Party Planner</span>
+          <span class="trait-tag">💬 Office Glue</span>
+          <span class="trait-tag">😊 Morale Booster</span>
+          <span class="trait-tag">🤗 Everyone's BFF</span>
+        </div>
+      </div>
+
+      <div class="result-card-mini mini-owl">
+        <div class="emoji">🦉</div>
+        <h3>The Watchful Owl</h3>
+        <div class="subtitle">"The Silent Strategist"</div>
+        <div class="mini-score"></div>
+        <div class="desc">
+          Quiet, observant, and always three steps ahead. This colleague says little in meetings but when they speak, everyone listens. They know exactly who's doing what — and who's NOT. Watch out: they see everything, remember everything, and might just use it when the time is right. Office politics? They wrote the playbook. 👀
+        </div>
+        <div class="traits">
+          <span class="trait-tag">👀 Sees Everything</span>
+          <span class="trait-tag">🧠 Strategic Mind</span>
+          <span class="trait-tag">🤫 Keeps Secrets</span>
+          <span class="trait-tag">♟️ Power Player</span>
+        </div>
+      </div>
+
+      <div class="result-card-mini mini-cat">
+        <div class="emoji">🐱</div>
+        <h3>The Cozy Cat</h3>
+        <div class="subtitle">"The Chill Survivor"</div>
+        <div class="mini-score"></div>
+        <div class="desc">
+          This colleague does the bare minimum with maximum grace. They've perfected the art of looking busy while doing absolutely nothing urgent. They'll never backstab you — that requires too much effort. They coast through chaos unbothered, somehow never get fired, and always leave on time. Honestly? Respect. We all wish we had their energy.
+        </div>
+        <div class="traits">
+          <span class="trait-tag">😌 Unbothered King/Queen</span>
+          <span class="trait-tag">🛋️ Comfort First</span>
+          <span class="trait-tag">⏰ Leaves On Time</span>
+          <span class="trait-tag">🧘 Zero Stress</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Share Section -->
+  <div class="share-section">
+    <h2>📣 Share the Results!</h2>
+    <p>📸 Take a screenshot of the score breakdown and your colleague's top Spirit Animal card!<br>
+    Share it on LinkedIn, tag your colleague, and watch the reactions 😄<br><br>
+    <strong>#OfficeSpritAnimal #WorkplaceFun #TeamBuilding #PersonalityQuiz</strong></p>
+  </div>
+
+  <footer>
+    <p>🐾 Office Spirit Animal Quiz — Made with love & workplace humor<br>
+    <em>Disclaimer: No colleagues were harmed in the making of this quiz. Results may be hilariously accurate.</em></p>
+  </footer>
+
+</div>
+
+</body>
+</html>
