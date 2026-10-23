@@ -1,0 +1,426 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Office Spirit Animal Quiz Hub</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: linear-gradient(135deg, #fdf6e3 0%, #f0e6d3 100%);
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #333;
+    min-height: 100vh;
+  }
+
+  .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+
+  /* Hero */
+  .hero {
+    text-align: center;
+    padding: 48px 24px;
+    background: linear-gradient(135deg, #ff9a56 0%, #ff6b6b 40%, #ee5a9f 70%, #8b5cf6 100%);
+    border-radius: 20px;
+    margin-bottom: 32px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "🐾🦊🐬🦉🐱🦫";
+    position: absolute;
+    font-size: 60px;
+    opacity: 0.08;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    letter-spacing: 20px;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: -40px;
+    left: -20px;
+    right: -20px;
+    height: 80px;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+  }
+  .hero-emoji { font-size: 64px; margin-bottom: 16px; position: relative; }
+  .hero h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; position: relative; letter-spacing: -0.5px; }
+  .hero p { font-size: 16px; opacity: 0.92; position: relative; max-width: 500px; margin: 0 auto; line-height: 1.6; }
+
+  /* Stats Bar */
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 24px;
+    position: relative;
+  }
+  .stat-item { text-align: center; }
+  .stat-num { font-size: 24px; font-weight: 800; display: block; }
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.8; }
+
+  /* Section Title */
+  .section-title {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .section-title h2 { font-size: 22px; color: #333; font-weight: 700; }
+  .section-title p { font-size: 14px; color: #888; margin-top: 4px; }
+
+  /* Quiz Cards Grid */
+  .quiz-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .quiz-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px 20px;
+    border: 2px solid #eee;
+    text-align: center;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    cursor: pointer;
+  }
+  .quiz-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+  }
+  .quiz-card .card-emoji { font-size: 52px; margin-bottom: 12px; }
+  .quiz-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+  .quiz-card .card-subtitle { font-size: 12px; font-style: italic; color: #999; margin-bottom: 10px; }
+  .quiz-card .card-desc { font-size: 13px; color: #666; line-height: 1.6; margin-bottom: 14px; }
+  .quiz-card .card-meta {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    font-size: 11px;
+    color: #aaa;
+  }
+  .quiz-card .card-meta span {
+    background: #f5f5f5;
+    padding: 4px 10px;
+    border-radius: 12px;
+  }
+  .quiz-card .card-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .card-workplace { border-color: #ff9a56; }
+  .card-workplace:hover { border-color: #ff6b6b; }
+  .card-workplace h3 { color: #e8590c; }
+  .card-workplace .card-badge { background: #fff3e0; color: #e8590c; }
+
+  .card-leadership { border-color: #8b5cf6; }
+  .card-leadership:hover { border-color: #7c3aed; }
+  .card-leadership h3 { color: #7c3aed; }
+  .card-leadership .card-badge { background: #f3e8ff; color: #7c3aed; }
+
+  .card-teamwork { border-color: #3b82f6; }
+  .card-teamwork:hover { border-color: #2563eb; }
+  .card-teamwork h3 { color: #2563eb; }
+  .card-teamwork .card-badge { background: #eff6ff; color: #2563eb; }
+
+  .card-stress { border-color: #10b981; }
+  .card-stress:hover { border-color: #059669; }
+  .card-stress h3 { color: #059669; }
+  .card-stress .card-badge { background: #ecfdf5; color: #059669; }
+
+  .coming-soon {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .coming-soon .card-badge { background: #f0f0f0; color: #999; }
+
+  /* Full-width featured card */
+  .featured-card { grid-column: 1 / -1; }
+  .featured-card .card-emoji { font-size: 60px; }
+
+  /* How It Works */
+  .how-section {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px 24px;
+    border: 1px solid #eee;
+    margin-bottom: 28px;
+  }
+  .how-section h2 { font-size: 20px; color: #ee5a9f; text-align: center; margin-bottom: 20px; }
+  .steps {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+  .step {
+    text-align: center;
+    padding: 16px 12px;
+  }
+  .step-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff9a56, #ee5a9f);
+    color: #fff;
+    font-weight: 800;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+  .step h4 { font-size: 14px; color: #333; margin-bottom: 4px; }
+  .step p { font-size: 12px; color: #888; line-height: 1.5; }
+
+  /* Animal Showcase */
+  .animals-showcase {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px 24px;
+    border: 1px solid #eee;
+    margin-bottom: 28px;
+    text-align: center;
+  }
+  .animals-showcase h2 { font-size: 20px; color: #ee5a9f; margin-bottom: 6px; }
+  .animals-showcase > p { font-size: 13px; color: #999; margin-bottom: 20px; }
+  .animal-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .animal-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 24px;
+    background: #f9f9f9;
+    border: 1px solid #eee;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+  .animal-chip:hover { transform: scale(1.05); }
+  .animal-chip .chip-emoji { font-size: 22px; }
+  .chip-beaver { color: #d97706; }
+  .chip-fox { color: #dc2626; }
+  .chip-dolphin { color: #2563eb; }
+  .chip-owl { color: #7c3aed; }
+  .chip-cat { color: #059669; }
+
+  /* CTA */
+  .cta-section {
+    text-align: center;
+    padding: 32px 20px;
+    background: linear-gradient(135deg, #fff5f0, #fff0f5, #f5f0ff);
+    border-radius: 16px;
+    border: 2px dashed #ee5a9f;
+    margin-bottom: 28px;
+  }
+  .cta-section h2 { font-size: 20px; color: #ee5a9f; margin-bottom: 8px; }
+  .cta-section p { font-size: 14px; color: #666; line-height: 1.6; max-width: 480px; margin: 0 auto; }
+
+  footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 12px;
+    color: #aaa;
+  }
+  footer a { color: #ee5a9f; text-decoration: none; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .quiz-card {
+      opacity: 0;
+      animation: cardIn 0.5s ease-out forwards;
+    }
+    .quiz-card:nth-child(1) { animation-delay: 0.1s; }
+    .quiz-card:nth-child(2) { animation-delay: 0.2s; }
+    .quiz-card:nth-child(3) { animation-delay: 0.3s; }
+    .quiz-card:nth-child(4) { animation-delay: 0.4s; }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: none; }
+    }
+    .animal-chip {
+      opacity: 0;
+      animation: chipIn 0.4s ease-out forwards;
+    }
+    .animal-chip:nth-child(1) { animation-delay: 0.1s; }
+    .animal-chip:nth-child(2) { animation-delay: 0.15s; }
+    .animal-chip:nth-child(3) { animation-delay: 0.2s; }
+    .animal-chip:nth-child(4) { animation-delay: 0.25s; }
+    .animal-chip:nth-child(5) { animation-delay: 0.3s; }
+    @keyframes chipIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  }
+
+  @media (max-width: 600px) {
+    .quiz-grid { grid-template-columns: 1fr; }
+    .featured-card { grid-column: auto; }
+    .steps { grid-template-columns: 1fr; }
+    .stats-bar { gap: 20px; }
+    .hero h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-emoji">🐾</div>
+    <h1>Office Spirit Animal</h1>
+    <p>Fun personality quizzes to discover the true workplace nature of your colleagues. Pick a quiz and start judging! 😄</p>
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-num">5</span>
+        <span class="stat-label">Spirit Animals</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">10</span>
+        <span class="stat-label">Questions Each</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">2 min</span>
+        <span class="stat-label">Per Quiz</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- How It Works -->
+  <div class="how-section">
+    <h2>How It Works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h4>Pick a Quiz</h4>
+        <p>Choose a quiz theme below that matches what you want to discover</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h4>Answer 10 Questions</h4>
+        <p>Think about your colleague and pick the most fitting answer</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h4>Reveal & Share!</h4>
+        <p>See their Spirit Animal, screenshot it, and tag them on LinkedIn!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiz Cards -->
+  <div class="section-title">
+    <h2>🎯 Choose a Quiz</h2>
+    <p>Click on a quiz card to get started</p>
+  </div>
+
+  <div class="quiz-grid">
+
+    <!-- FEATURED: Workplace Quiz (LIVE) -->
+    <a href="workplace-quiz.html" class="quiz-card card-workplace featured-card">
+      <span class="card-badge">🔥 LIVE</span>
+      <div class="card-emoji">🏢</div>
+      <h3>Workplace Personality Quiz</h3>
+      <div class="card-subtitle">"Who's really doing the work around here?"</div>
+      <div class="card-desc">Discover if your colleague is a hardworking Beaver, a work-pushing Fox, a social Dolphin, a scheming Owl, or a chill Cat. The original and most popular quiz!</div>
+      <div class="card-meta">
+        <span>📝 10 Questions</span>
+        <span>⏱️ 2 Minutes</span>
+        <span>🐾 5 Animals</span>
+      </div>
+    </a>
+
+    <!-- Leadership Quiz (Coming Soon) -->
+    <div class="quiz-card card-leadership coming-soon">
+      <span class="card-badge">COMING SOON</span>
+      <div class="card-emoji">👑</div>
+      <h3>Leadership Style Quiz</h3>
+      <div class="card-subtitle">"What kind of boss would they be?"</div>
+      <div class="card-desc">Find out if your colleague leads like a commanding Lion, a nurturing Mama Bear, or a chaotic Seagull manager.</div>
+      <div class="card-meta">
+        <span>📝 10 Questions</span>
+        <span>⏱️ 2 Minutes</span>
+        <span>🦁 5 Animals</span>
+      </div>
+    </div>
+
+    <!-- Teamwork Quiz (Coming Soon) -->
+    <div class="quiz-card card-teamwork coming-soon">
+      <span class="card-badge">COMING SOON</span>
+      <div class="card-emoji">🤝</div>
+      <h3>Teamwork Style Quiz</h3>
+      <div class="card-subtitle">"Are they a team player or a lone wolf?"</div>
+      <div class="card-desc">Discover if your colleague thrives in a pack like a Wolf, works solo like a Tiger, or just follows the herd like a Sheep.</div>
+      <div class="card-meta">
+        <span>📝 10 Questions</span>
+        <span>⏱️ 2 Minutes</span>
+        <span>🐺 5 Animals</span>
+      </div>
+    </div>
+
+    <!-- Stress Response Quiz (Coming Soon) -->
+    <div class="quiz-card card-stress coming-soon">
+      <span class="card-badge">COMING SOON</span>
+      <div class="card-emoji">😰</div>
+      <h3>Under Pressure Quiz</h3>
+      <div class="card-subtitle">"How do they handle the heat?"</div>
+      <div class="card-desc">When deadlines hit, does your colleague freeze like a Deer, fight like a Honey Badger, or disappear like a Chameleon?</div>
+      <div class="card-meta">
+        <span>📝 10 Questions</span>
+        <span>⏱️ 2 Minutes</span>
+        <span>🦡 5 Animals</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Animal Showcase -->
+  <div class="animals-showcase">
+    <h2>🐾 Meet the Spirit Animals</h2>
+    <p>These are the 5 workplace personalities you might discover</p>
+    <div class="animal-row">
+      <div class="animal-chip chip-beaver"><span class="chip-emoji">🦫</span> Busy Beaver</div>
+      <div class="animal-chip chip-fox"><span class="chip-emoji">🦊</span> Sly Fox</div>
+      <div class="animal-chip chip-dolphin"><span class="chip-emoji">🐬</span> Dazzling Dolphin</div>
+      <div class="animal-chip chip-owl"><span class="chip-emoji">🦉</span> Watchful Owl</div>
+      <div class="animal-chip chip-cat"><span class="chip-emoji">🐱</span> Cozy Cat</div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <h2>📣 Share With Your Team!</h2>
+    <p>Send this page to your colleagues and let everyone discover each other's Spirit Animals. Post your results on LinkedIn with <strong>#OfficeSpritAnimal</strong> and tag the people you quizzed! 🐾</p>
+  </div>
+
+  <footer>
+    <p>🐾 Office Spirit Animal Quiz Hub — Made with ❤️ and workplace humor<br>
+    <em>Disclaimer: No colleagues were harmed. Results may be hilariously accurate.</em></p>
+  </footer>
+
+</div>
+
+</body>
+</html>
+
